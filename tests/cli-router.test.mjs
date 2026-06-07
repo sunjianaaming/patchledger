@@ -96,7 +96,7 @@ async function mockOpenAiServer() {
   };
 }
 
-test("init creates local router config and policy without Paperclip company id", async () => {
+test("init creates local router config and policy", async () => {
   const cwd = await tempProject();
   const result = await runCli(["init", "--openai-model", "gpt-test", "--anthropic-model", "claude-test", "--test-command", "node --version"], { cwd });
 
