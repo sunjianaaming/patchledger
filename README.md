@@ -134,6 +134,12 @@ Please send back:
 - whether the task result was useful;
 - any error message you saw.
 
+You can also fill out the 3-minute feedback form:
+
+```text
+https://tally.so/r/9q4JQV
+```
+
 ## Common Errors
 
 ### `node: command not found`
