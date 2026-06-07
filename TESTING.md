@@ -59,16 +59,3 @@ If npm is not available:
 node --test tests/*.test.mjs
 node --check bin/patchledger.mjs
 ```
-
-## 4. Legacy Paperclip Sample Test
-
-```bash
-node bin/patchledger.mjs report --sample
-node bin/patchledger.mjs guard --sample
-```
-
-Expected:
-
-- Agents above 80% show `SOFT`.
-- Agents at or above 100% show `HARD`.
-- `guard --sample` exits with code `2` when a hard-limit agent exists.
