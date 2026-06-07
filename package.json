@@ -1,0 +1,16 @@
+{
+  "name": "patchledger",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Local coding-agent FinOps and quality router.",
+  "license": "MIT",
+  "bin": {
+    "patchledger": "./bin/patchledger.mjs"
+  },
+  "scripts": {
+    "start": "node bin/patchledger.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check bin/patchledger.mjs"
+  }
+}
