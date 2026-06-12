@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>错题伙伴 · 交互原型 v0.1（低保真）</title>
+<!--
+  低保真可点击原型：核心闭环 7 屏。
+  所有 AI 对话为写死的示例（贯穿题：3/4 + 1/6 异分母分数加法）。
+  美术一律用 emoji 占位；🎙️ 按钮点击模拟「录音→识别」状态流转。
+  直接用浏览器打开本文件即可体验。
+-->
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#e8eaf2; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+         display:flex; justify-content:center; min-height:100vh; }
+  .phone { width:100%; max-width:400px; min-height:100vh; background:#f6f7fb;
+           display:flex; flex-direction:column; position:relative; box-shadow:0 0 24px rgba(0,0,0,.12); }
+  .screen { display:none; flex:1; flex-direction:column; padding:16px; padding-bottom:90px; }
+  .screen.active { display:flex; }
+
+  /* 顶栏与流程进度 */
+  .topbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .back { border:none; background:#fff; border-radius:10px; width:34px; height:34px; font-size:16px; }
+  .topbar h1 { font-size:17px; flex:1; }
+  .steps { display:flex; gap:5px; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#d6d9e6; }
+  .dot.on { background:#6c5ce7; }
+
+  .card { background:#fff; border-radius:16px; padding:16px; margin-bottom:12px;
+          box-shadow:0 1px 4px rgba(80,80,120,.06); }
+  .muted { color:#8a8fa3; font-size:13px; line-height:1.6; }
+  .tag { display:inline-block; background:#efedfd; color:#6c5ce7; font-size:12px;
+         border-radius:8px; padding:2px 8px; margin-right:6px; }
+
+  .btn { display:block; width:100%; border:none; border-radius:14px; padding:14px;
+         font-size:16px; font-weight:600; background:#6c5ce7; color:#fff; margin-top:10px; cursor:pointer; }
+  .btn:active { transform:scale(.98); }
+  .btn.ghost { background:#fff; color:#6c5ce7; border:1.5px solid #d8d3f8; font-weight:500; }
+  .btn.big { padding:18px; font-size:17px; border-radius:18px; }
+
+  /* 对话气泡 */
+  .chat { display:flex; flex-direction:column; gap:10px; }
+  .row { display:flex; gap:8px; align-items:flex-end; }
+  .row.me { flex-direction:row-reverse; }
+  .avatar { width:34px; height:34px; border-radius:50%; background:#fff; display:flex;
+            align-items:center; justify-content:center; font-size:20px; flex:none;
+            box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .bubble { max-width:78%; padding:11px 13px; border-radius:16px; font-size:15px; line-height:1.55;
+            background:#fff; border-bottom-left-radius:4px; box-shadow:0 1px 3px rgba(80,80,120,.06); }
+  .row.me .bubble { background:#6c5ce7; color:#fff; border-bottom-left-radius:16px; border-bottom-right-radius:4px; }
+
+  /* 录音按钮三态 */
+  .mic { display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+         border:none; border-radius:14px; padding:14px; font-size:15px; font-weight:600;
+         background:#ffe9e3; color:#e0552f; margin-top:10px; cursor:pointer; }
+  .mic.rec { background:#e0552f; color:#fff; animation:pulse 1s infinite; }
+  .mic.busy { background:#f0f0f6; color:#8a8fa3; }
+  @keyframes pulse { 50% { opacity:.75; } }
+
+  .hide { display:none !important; }
+
+  /* 题目展示 */
+  .qbox { background:#fffdf3; border:1.5px dashed #e8c66a; border-radius:12px; padding:14px;
+          font-size:17px; text-align:center; line-height:1.7; }
+  .frac { display:inline-block; text-align:center; vertical-align:middle; margin:0 3px; }
+  .frac span { display:block; padding:0 5px; font-size:15px; }
+  .frac span:first-child { border-bottom:1.5px solid #333; }
+  .row.me .frac span:first-child, .opt .frac span:first-child { border-color:inherit; }
+
+  /* 选项 */
+  .opts { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .opt { border:1.5px solid #e3e5f0; background:#fff; border-radius:12px; padding:14px;
+         font-size:17px; cursor:pointer; text-align:center; }
+  .opt.right { border-color:#27ae60; background:#eafaf0; }
+  .opt.wrong { border-color:#e0552f; background:#fdf0ec; }
+
+  /* 能量条 */
+  .energy { height:10px; background:#edeef5; border-radius:6px; overflow:hidden; margin-top:6px; }
+  .energy i { display:block; height:100%; background:linear-gradient(90deg,#a29bfe,#6c5ce7);
+              border-radius:6px; transition:width .8s; }
+  .monster { display:flex; align-items:center; gap:10px; padding:10px 0; }
+  .monster .m-emoji { font-size:30px; }
+  .monster .m-body { flex:1; }
+  .monster .m-name { font-size:14px; font-weight:600; }
+
+  /* 相机取景 */
+  .viewfinder { background:#2d2f3a; border-radius:16px; padding:22px 16px; color:#fff; position:relative; }
+  .photo { background:#fff; color:#333; border-radius:6px; padding:18px 10px; font-size:14px;
+           line-height:2; transform:rotate(-.6deg); }
+  .photo .other { color:#b9bcc9; }
+  .cropbox { border:2.5px dashed #6c5ce7; border-radius:8px; padding:6px 4px; position:relative;
+             background:#f3f1ff; }
+  .cropbox::after { content:"✓ 就这道"; position:absolute; right:-2px; top:-24px; background:#6c5ce7;
+                    color:#fff; font-size:11px; border-radius:6px; padding:2px 6px; }
+  .shutter { width:62px; height:62px; border-radius:50%; border:4px solid #fff; background:#6c5ce7;
+             margin:16px auto 0; display:block; cursor:pointer; }
+
+  .ocr-edit { width:100%; border:1.5px solid #d8d3f8; border-radius:12px; padding:12px;
+              font-size:16px; font-family:inherit; line-height:1.6; background:#fcfbff; }
+
+  /* 归因卡 */
+  .cause { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .chip { border:1.5px solid #e3e5f0; background:#fff; border-radius:20px; padding:7px 14px;
+          font-size:14px; cursor:pointer; }
+  .chip.on { border-color:#6c5ce7; background:#efedfd; color:#6c5ce7; font-weight:600; }
+
+  /* 打卡成功 */
+  .celebrate { text-align:center; padding-top:40px; }
+  .celebrate .big-emoji { font-size:72px; }
+  .ticket { background:linear-gradient(135deg,#ffb347,#ff8008); color:#fff; border-radius:16px;
+            padding:18px; margin:18px 0; text-align:center; }
+  .ticket b { font-size:20px; }
+
+  .note { background:#fff8e8; border-radius:10px; padding:10px 12px; font-size:12.5px;
+          color:#9a7b2d; line-height:1.6; margin-top:10px; }
+  .placeholder { font-size:11px; color:#b6b9c8; text-align:center; margin-top:4px; }
+
+  .progress2 { display:flex; gap:10px; margin-top:12px; }
+  .pstep { flex:1; background:#fff; border-radius:12px; padding:12px; font-size:13px; }
+  .pstep .st { font-size:18px; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- ===================== 1. 首页 / 今日 ===================== -->
+<section class="screen active" id="home">
+  <div class="topbar"><h1>嗨，小宇 🌞</h1><span class="tag">🔥 连续 3 天</span></div>
+
+  <div class="card">
+    <b style="font-size:16px;">今日打卡</b>
+    <div class="progress2">
+      <div class="pstep"><span class="st" id="st1">⭕</span> 第一步<br>攻克今天的新错题</div>
+      <div class="pstep"><span class="st" id="st2">⭕</span> 第二步<br>费曼题 + 复习题</div>
+    </div>
+    <button class="btn big" onclick="go('capture')">📷 拍今天的错题</button>
+    <button class="btn ghost" onclick="alert('原型占位：今天没有错题时走「学习感悟」（第二批原型）')">今天没有错题？</button>
+  </div>
+
+  <div class="card">
+    <b style="font-size:15px;">我的小怪兽</b>
+    <div class="monster"><span class="m-emoji">👾</span>
+      <div class="m-body"><div class="m-name">阿通分 · 分数加减法</div>
+        <div class="energy"><i style="width:60%"></i></div></div>
+      <span class="muted">60</span></div>
+    <div class="monster"><span class="m-emoji">🦖</span>
+      <div class="m-body"><div class="m-name">小数点 · 小数加减法 <span class="tag">今天到期!</span></div>
+        <div class="energy"><i style="width:80%"></i></div></div>
+      <span class="muted">80</span></div>
+    <div class="placeholder">▲ 怪兽形象为 AI 生成图占位</div>
+  </div>
+</section>
+
+<!-- ===================== 2. 拍照录题 ===================== -->
+<section class="screen" id="capture">
+  <div class="topbar"><button class="back" onclick="go('home')">‹</button><h1>拍错题</h1>
+    <div class="steps"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+
+  <!-- 2a 取景 -->
+  <div id="cap-shoot">
+    <div class="viewfinder">
+      <div class="photo">
+        <div class="other">3. 一个长方形长 8 厘米，宽 5 厘米……</div>
+        <div>4. 计算：<span class="frac"><span>3</span><span>4</span></span> + <span class="frac"><span>1</span><span>6</span></span> = ______</div>
+        <div class="other">5. 小明买了 3 支铅笔……</div>
+      </div>
+      <button class="shutter" onclick="show('cap-shoot',false);show('cap-crop',true)"></button>
+      <div style="text-align:center;font-size:12px;margin-top:8px;opacity:.7">对准作业本，咔嚓一下 📸</div>
+    </div>
+  </div>
+
+  <!-- 2b 框选 -->
+  <div id="cap-crop" class="hide">
+    <div class="card">
+      <b>框住要收的那道题</b>
+      <div class="muted">我自动框了一道，拖动四角可以调整（原型为静态示意）</div>
+      <div class="photo" style="margin-top:10px;transform:none;">
+        <div class="other">3. 一个长方形长 8 厘米……</div>
+        <div class="cropbox">4. 计算：<span class="frac"><span>3</span><span>4</span></span> + <span class="frac"><span>1</span><span>6</span></span> = ______</div>
+        <div class="other">5. 小明买了 3 支铅笔……</div>
+      </div>
+      <button class="btn" onclick="show('cap-crop',false);show('cap-ocr',true)">就是这道 ✓</button>
+      <button class="btn ghost" onclick="show('cap-crop',false);show('cap-shoot',true)">重拍一张</button>
+    </div>
+  </div>
+
+  <!-- 2c OCR 确认 -->
+  <div id="cap-ocr" class="hide">
+    <div class="card">
+      <b>我认出来的题目 👀</b>
+      <div class="muted" style="margin-bottom:8px;">认错了可以直接改，或者用语音告诉我</div>
+      <textarea class="ocr-edit" rows="2">计算：3/4 + 1/6 = ______</textarea>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <span class="tag">数学</span><span class="tag">分数加减法 · 异分母通分</span>
+      </div>
+      <button class="btn" onclick="go('diagnose')">题目对啦，继续 →</button>
+      <button class="mic" onclick="alert('原型占位：语音补充题干')">🎙️ 语音补充</button>
+      <div class="note">兜底：连续两次识别失败 → “这道题有点调皮，换个角度再拍一张试试？”（绝不卡死）</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 3. 错因诊断 ===================== -->
+<section class="screen" id="diagnose">
+  <div class="topbar"><button class="back" onclick="go('capture')">‹</button><h1>和嘟嘟聊聊这道题</h1>
+    <div class="steps"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+
+  <div class="qbox" style="margin-bottom:12px;">计算：<span class="frac"><span>3</span><span>4</span></span> + <span class="frac"><span>1</span><span>6</span></span> = ______</div>
+
+  <div class="chat">
+    <div class="row"><span class="avatar">🐣</span><div class="bubble">收好啦！先别急着算——<b>用你自己的话</b>告诉嘟嘟，这道题让你干嘛呀？</div></div>
+    <button class="mic" id="mic1" onclick="rec('mic1','d-step2')">🎙️ 点一下，说给嘟嘟听</button>
+
+    <div id="d-step2" class="hide">
+      <div class="row me"><div class="bubble">就是把四分之三和六分之一加在一起。</div><span class="avatar">🧒</span></div>
+      <div class="row"><span class="avatar">🐣</span><div class="bubble">听懂啦！那你现在<b>再做一遍</b>，答案是多少？</div></div>
+      <button class="mic" id="mic2" onclick="rec('mic2','d-step3')">🎙️ 语音报答案</button>
+    </div>
+
+    <div id="d-step3" class="hide">
+      <div class="row me"><div class="bubble">嗯……十分之四？</div><span class="avatar">🧒</span></div>
+      <div class="row"><span class="avatar">🐣</span><div class="bubble">和上次写的一样呀，别急 😊 嘟嘟问你个小问题：<span class="frac"><span>3</span><span>4</span></span> 和 <span class="frac"><span>1</span><span>6</span></span> 的<b>分母不一样</b>，能直接把分子、分母各自加起来吗？</div></div>
+      <button class="mic" id="mic3" onclick="rec('mic3','d-step4')">🎙️ 想一想，再回答</button>
+    </div>
+
+    <div id="d-step4" class="hide">
+      <div class="row me"><div class="bubble">……不能？好像要先把分母变成一样的。</div><span class="avatar">🧒</span></div>
+      <div class="row"><span class="avatar">🐣</span><div class="bubble">对啦！这一步叫<b>通分</b>。看：<br>
+        <span class="frac"><span>3</span><span>4</span></span> = <span class="frac"><span>9</span><span>12</span></span>，
+        <span class="frac"><span>1</span><span>6</span></span> = <span class="frac"><span>2</span><span>12</span></span>，
+        再加就是 <span class="frac"><span>11</span><span>12</span></span> 🎯<br>现在你再说一遍答案？</div></div>
+      <button class="mic" id="mic4" onclick="rec('mic4','d-step5')">🎙️ 再答一次</button>
+    </div>
+
+    <div id="d-step5" class="hide">
+      <div class="row me"><div class="bubble">十二分之十一！</div><span class="avatar">🧒</span></div>
+      <div class="row"><span class="avatar">🐣</span><div class="bubble">答对啦 ✨ 你把「先通分」补上了，进步！</div></div>
+      <div class="card">
+        <b>嘟嘟的小本本记下了 📒</b>
+        <div class="muted" style="margin:6px 0;">这道题错的原因（点一下可以改）：</div>
+        <div class="cause">
+          <span class="chip" onclick="pick(this)">粗心</span>
+          <span class="chip" onclick="pick(this)">读题没读懂</span>
+          <span class="chip on" onclick="pick(this)">概念不清 · 通分</span>
+          <span class="chip" onclick="pick(this)">不会</span>
+        </div>
+        <button class="btn" onclick="go('practice')">去做一道类似题 →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 4. 同类题测试 ===================== -->
+<section class="screen" id="practice">
+  <div class="topbar"><button class="back" onclick="go('diagnose')">‹</button><h1>换个数字试试</h1>
+    <div class="steps"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+
+  <div class="card">
+    <span class="tag">同一个知识点 · 新题</span>
+    <div class="qbox" style="margin-top:10px;">计算：<span class="frac"><span>2</span><span>5</span></span> + <span class="frac"><span>1</span><span>3</span></span> = ?</div>
+    <div class="opts">
+      <button class="opt" onclick="answer(this,false)"><span class="frac"><span>3</span><span>8</span></span></button>
+      <button class="opt" onclick="answer(this,true)"><span class="frac"><span>11</span><span>15</span></span></button>
+      <button class="opt" onclick="answer(this,false)"><span class="frac"><span>3</span><span>15</span></span></button>
+      <button class="opt" onclick="answer(this,false)"><span class="frac"><span>2</span><span>8</span></span></button>
+    </div>
+    <div id="p-wrong" class="note hide">再想想？这次分母要变成多少呀 🤔（不算错，慢慢来）</div>
+    <div id="p-right" class="hide">
+      <div class="note" style="background:#eafaf0;color:#1e7e46;">✅ 答对啦！你已经会「换数字也不怕」了——第一步完成 🎉 阿通分能量 +30</div>
+      <button class="btn" onclick="go('feynman')">第二步：当小老师 →</button>
+    </div>
+    <button class="btn ghost" style="font-size:13px;padding:8px;" onclick="alert('原型占位：申诉流程——孩子重述思路，AI 二次判定，宁可放过不可错杀')">我觉得我对了 🙋</button>
+    <div class="muted" style="margin-top:6px;">作答方式按题型切换：选择题点选 / 口算语音报答案 / 解答题拍照（原型只演示点选）</div>
+  </div>
+</section>
+
+<!-- ===================== 5. 费曼讲解 ===================== -->
+<section class="screen" id="feynman">
+  <div class="topbar"><button class="back" onclick="go('practice')">‹</button><h1>小老师时间 🎓</h1>
+    <div class="steps"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div></div>
+
+  <div class="chat">
+    <div class="row"><span class="avatar">🐣</span><div class="bubble">嘟嘟还是有点晕 😵 你当老师，<b>教教我</b>：为什么 <span class="frac"><span>2</span><span>5</span></span> + <span class="frac"><span>1</span><span>3</span></span> 要先把分母都变成 15 呀？</div></div>
+    <button class="mic" id="mic5" onclick="rec('mic5','f-step2')">🎙️ 开始讲课</button>
+
+    <div id="f-step2" class="hide">
+      <div class="row me"><div class="bubble">因为分母不一样，就像一个切 5 块、一个切 3 块的蛋糕，没法直接加，要切成一样大的小块。</div><span class="avatar">🧒</span></div>
+      <div class="row"><span class="avatar">🐣</span><div class="bubble">哦～切成一样大的！那 <b>15 是怎么找出来的</b>呀？为什么不是 8？</div></div>
+      <button class="mic" id="mic6" onclick="rec('mic6','f-step3')">🎙️ 继续讲</button>
+    </div>
+
+    <div id="f-step3" class="hide">
+      <div class="row me"><div class="bubble">因为 15 是 5 和 3 的最小公倍数，5 和 3 都能变成 15。</div><span class="avatar">🧒</span></div>
+      <div class="row"><span class="avatar">🐣</span><div class="bubble">嘟嘟听懂啦！🎉 你今天把<b>「为什么要通分」</b>和<b>「公分母怎么找」</b>都讲清楚了，蛋糕的比方特别棒，比上次进步！</div></div>
+      <div class="card">
+        <div class="monster"><span class="m-emoji">👾</span>
+          <div class="m-body"><div class="m-name">阿通分 · 理解度</div>
+            <div class="energy"><i style="width:90%"></i></div></div>
+          <span style="color:#27ae60;font-weight:700;">90 ↑</span></div>
+        <button class="btn" onclick="go('review')">最后一题：以前的小怪兽来啦 →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 6. 艾宾浩斯复习 ===================== -->
+<section class="screen" id="review">
+  <div class="topbar"><button class="back" onclick="go('feynman')">‹</button><h1>复习挑战 ⏰</h1>
+    <div class="steps"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div></div>
+
+  <div class="card">
+    <div class="row"><span class="avatar">🦖</span><div class="bubble">还记得我吗？<b>4 天前</b>你驯服过我！我饿了，想再考考你 😋</div></div>
+    <span class="tag" style="margin-top:10px;">小数加减法 · 第 3 次复习</span>
+    <div class="qbox" style="margin-top:10px;">计算：0.8 + 0.15 = ?</div>
+    <div class="opts">
+      <button class="opt" onclick="answer2(this,false)">0.23</button>
+      <button class="opt" onclick="answer2(this,true)">0.95</button>
+      <button class="opt" onclick="answer2(this,false)">1.05</button>
+      <button class="opt" onclick="answer2(this,false)">0.85</button>
+    </div>
+    <div id="r-wrong" class="note hide">咦，小数点对齐了吗？再试一次 😊（答错只会回到更近的复习点，不会白学）</div>
+    <div id="r-right" class="hide">
+      <div class="note" style="background:#eafaf0;color:#1e7e46;">✅ 记得牢牢的！小数点能量 +20 → <b>100，点亮啦 💡</b>下次 7 天后再见～</div>
+      <button class="btn" onclick="go('done');document.getElementById('st1').textContent='✅';document.getElementById('st2').textContent='✅';">完成今日打卡 🎉</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 7. 打卡成功 ===================== -->
+<section class="screen" id="done">
+  <div class="celebrate">
+    <div class="big-emoji">🎉</div>
+    <h2 style="margin-top:8px;">今日打卡完成！</h2>
+    <div class="muted" style="margin-top:4px;">🔥 连续打卡 4 天 · 此处有撒花动画占位</div>
+  </div>
+
+  <div class="ticket">
+    🎫 你获得一张游戏券<br>
+    <b>10 分钟 · 蛋仔派对</b><br>
+    <span style="font-size:13px;opacity:.9;">去找爸爸妈妈兑换吧～</span>
+  </div>
+
+  <div class="card">
+    <b>今天的收获</b>
+    <div class="monster"><span class="m-emoji">👾</span>
+      <div class="m-body"><div class="m-name">阿通分 · 分数加减法</div>
+        <div class="energy"><i style="width:90%"></i></div></div>
+      <span style="color:#27ae60;font-weight:700;">90 ↑</span></div>
+    <div class="monster"><span class="m-emoji">🦖✨</span>
+      <div class="m-body"><div class="m-name">小数点 · 已点亮！获得徽章 🏅</div>
+        <div class="energy"><i style="width:100%"></i></div></div>
+      <span style="color:#27ae60;font-weight:700;">100</span></div>
+  </div>
+  <button class="btn big" onclick="go('home')">回到首页</button>
+  <div class="placeholder">家长设置区同步显示「今日已打卡，可发放奖励」（第二批原型）</div>
+</section>
+
+<script>
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function show(id,on){ document.getElementById(id).classList.toggle('hide',!on); }
+
+/* 录音按钮三态：待录 → 录音中 → 识别中 → 显示转写并推进对话 */
+function rec(micId,revealId){
+  const b=document.getElementById(micId);
+  if(b.dataset.state==='rec'){           // 第二次点击 = 说完了
+    b.dataset.state='busy'; b.className='mic busy'; b.textContent='✨ 嘟嘟正在听懂…';
+    setTimeout(()=>{ b.classList.add('hide'); show(revealId,true);
+      b.closest('.screen').scrollIntoView(false); },800);
+  }else if(!b.dataset.state){            // 第一次点击 = 开始录
+    b.dataset.state='rec'; b.className='mic rec'; b.textContent='🔴 录音中… 说完再点一下';
+  }
+}
+function pick(el){
+  el.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+}
+function answer(el,right){
+  if(right){ el.classList.add('right'); show('p-wrong',false); show('p-right',true); }
+  else{ el.classList.add('wrong'); show('p-wrong',true); }
+}
+function answer2(el,right){
+  if(right){ el.classList.add('right'); show('r-wrong',false); show('r-right',true); }
+  else{ el.classList.add('wrong'); show('r-wrong',true); }
+}
+</script>
+</div>
+</body>
+</html>
