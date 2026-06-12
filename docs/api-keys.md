@@ -8,10 +8,12 @@
 | # | 能力 | 服务商 | 环境变量 | 状态 |
 |---|------|--------|----------|------|
 | 1 | 视觉理解 + 文本推理 | 火山方舟 · 豆包 | `ARK_API_KEY` | ✅ 已配置 |
-| 2 | ASR 语音识别 | 火山引擎（推荐） | `VOLC_ASR_APP_ID` / `VOLC_ASR_ACCESS_TOKEN` | ⬜ 待补充 |
-| 3 | TTS 语音合成 | 火山引擎（推荐） | `VOLC_TTS_APP_ID` / `VOLC_TTS_ACCESS_TOKEN` | ⬜ 待补充 |
-| 4 | 联网搜索 | 博查 / Tavily / Serper 任选 | `SEARCH_API_KEY` | ⬜ 待补充 |
-| 5 | 微信小程序凭证 | 微信公众平台 | `WX_APPID` / `WX_APP_SECRET` | ⬜ 待补充 |
+| 2 | ASR 语音识别 | 火山引擎 | `VOLC_ASR_APP_ID` / `VOLC_ASR_ACCESS_TOKEN` / `VOLC_ASR_SECRET_KEY` | ✅ 已配置 |
+| 3 | TTS 语音合成 | 火山引擎 | `VOLC_TTS_APP_ID` / `VOLC_TTS_ACCESS_TOKEN` / `VOLC_TTS_SECRET_KEY` | ✅ 已配置 |
+| 4 | 联网搜索 | 博查 / Tavily / Serper 任选 | `SEARCH_API_KEY` | ⬜ 待补充（MVP 可缓）|
+| 5 | 微信小程序凭证 | 微信公众平台 | `WX_APPID` / `WX_APP_SECRET` | ✅ 已配置 |
+
+> **语音方案（2026-06-12 已定）**：v1 用「录音 → ASR → 推理 → TTS」管线；豆包**实时语音交互**模型（端到端语音对话，约 0.1 元/轮，WebSocket 流式接入，同一个 ARK key 可调）留作 v1.x「费曼讲解」环节的体验升级，不在 MVP 范围。
 
 ## 各项说明
 
