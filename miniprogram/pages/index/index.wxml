@@ -1,0 +1,194 @@
+<view class="wrap">
+
+<!-- ===== 1. 首页 / 今日 ===== -->
+<block wx:if="{{screen === 'home'}}">
+  <view class="topbar"><view class="h1">嗨，小宇 🌞</view><view class="tag">🔥 连续 {{streak}} 天</view></view>
+
+  <view class="card">
+    <view class="title">今日打卡</view>
+    <view class="progress2">
+      <view class="pstep"><text class="st">{{st1 ? '✅' : '⭕'}}</text> 第一步<view>攻克今天的新错题</view></view>
+      <view class="pstep"><text class="st">{{st2 ? '✅' : '⭕'}}</text> 第二步<view>费曼题 + 复习题</view></view>
+    </view>
+    <view class="btn btn-big" bindtap="go" data-s="capture">📷 拍今天的错题</view>
+    <view class="btn btn-ghost" bindtap="noMistake">今天没有错题？</view>
+  </view>
+
+  <view class="card">
+    <view class="title">我的小怪兽</view>
+    <view class="monster"><text class="m-emoji">👾</text>
+      <view class="m-body"><view class="m-name">阿通分 · 分数加减法</view>
+        <view class="energy"><view class="energy-i" style="width:60%"></view></view></view>
+      <text class="m-val">60</text></view>
+    <view class="monster"><text class="m-emoji">🦖</text>
+      <view class="m-body"><view class="m-name">小数点 · 小数加减法 <text class="tag">今天到期!</text></view>
+        <view class="energy"><view class="energy-i" style="width:80%"></view></view></view>
+      <text class="m-val">80</text></view>
+    <view class="placeholder">▲ 怪兽形象为 AI 生成图占位</view>
+  </view>
+</block>
+
+<!-- ===== 2. 拍照录题 ===== -->
+<block wx:if="{{screen === 'capture'}}">
+  <view class="topbar"><view class="back" bindtap="go" data-s="home">‹</view><view class="h1">拍错题</view>
+    <view class="dots"><view class="dot dot-on"></view><view class="dot"></view><view class="dot"></view><view class="dot"></view><view class="dot"></view><view class="dot"></view></view></view>
+
+  <block wx:if="{{capStep === 'shoot'}}">
+    <view class="card">
+      <view class="title">📷 对准作业本，拍下错的那道题</view>
+      <view class="muted" style="margin-top:8rpx;">可以拍照，也可以从相册选</view>
+      <view class="btn btn-big" bindtap="shoot">咔嚓，拍照 / 选图</view>
+      <view class="btn btn-ghost" bindtap="skipShoot">先用示例题试试 →</view>
+    </view>
+  </block>
+
+  <block wx:if="{{capStep === 'crop'}}">
+    <view class="card">
+      <view class="title">框住要收的那道题</view>
+      <view class="muted">原型说明：开发版在这里自动框题 + 手动微调，现在先整张继续</view>
+      <image wx:if="{{photo}}" class="photo-prev" src="{{photo}}" mode="widthFix"></image>
+      <view class="btn" bindtap="cropOk">就是这道 ✓</view>
+      <view class="btn btn-ghost" bindtap="reshoot">重拍一张</view>
+    </view>
+  </block>
+
+  <block wx:if="{{capStep === 'ocr'}}">
+    <view class="card">
+      <view class="title">我认出来的题目 👀</view>
+      <view class="muted" style="margin-bottom:6rpx;">认错了可以直接改，或者用语音告诉我（原型为预置文本）</view>
+      <textarea class="ocr-edit" value="{{ocrText}}" bindinput="ocrInput" auto-height></textarea>
+      <view style="margin-top:14rpx;"><text class="tag">数学</text><text class="tag">分数加减法 · 异分母通分</text></view>
+      <view class="btn" bindtap="go" data-s="diagnose">题目对啦，继续 →</view>
+      <view class="mic" bindtap="voiceAdd">🎙️ 语音补充</view>
+      <view class="note">兜底：连续两次识别失败 → “这道题有点调皮，换个角度再拍一张试试？”（绝不卡死）</view>
+    </view>
+  </block>
+</block>
+
+<!-- ===== 3. 错因诊断 ===== -->
+<block wx:if="{{screen === 'diagnose'}}">
+  <view class="topbar"><view class="back" bindtap="go" data-s="capture">‹</view><view class="h1">和嘟嘟聊聊这道题</view>
+    <view class="dots"><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot"></view><view class="dot"></view><view class="dot"></view><view class="dot"></view></view></view>
+
+  <view class="qbox">计算：<view class="frac"><view class="fn">3</view><view class="fd">4</view></view> + <view class="frac"><view class="fn">1</view><view class="fd">6</view></view> = ______</view>
+
+  <view class="chat" style="margin-top:22rpx;">
+    <view wx:for="{{dMsgs}}" wx:key="index" class="row {{item.who === 'me' ? 'row-me' : ''}}">
+      <view class="avatar">{{item.who === 'me' ? '🧒' : '🐣'}}</view>
+      <view class="bubble {{item.who === 'me' ? 'bubble-me' : ''}}">{{item.text}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!dDone}}" class="mic {{micState === 'rec' ? 'mic-rec' : ''}} {{micState === 'busy' ? 'mic-busy' : ''}}" bindtap="micTap">
+    {{micState === 'idle' ? micLabel : micState === 'rec' ? '🔴 录音中… 说完再点一下' : '✨ 嘟嘟正在听懂…'}}
+  </view>
+
+  <view wx:if="{{dDone}}" class="card" style="margin-top:22rpx;">
+    <view class="title">嘟嘟的小本本记下了 📒</view>
+    <view class="muted" style="margin:10rpx 0;">这道题错的原因（点一下可以改）：</view>
+    <view class="cause">
+      <view wx:for="{{causes}}" wx:key="index" class="chip {{cause === index ? 'chip-on' : ''}}"
+            bindtap="pickCause" data-i="{{index}}">{{item}}</view>
+    </view>
+    <view class="btn" bindtap="go" data-s="practice">去做一道类似题 →</view>
+  </view>
+</block>
+
+<!-- ===== 4. 同类题测试 ===== -->
+<block wx:if="{{screen === 'practice'}}">
+  <view class="topbar"><view class="back" bindtap="go" data-s="diagnose">‹</view><view class="h1">换个数字试试</view>
+    <view class="dots"><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot"></view><view class="dot"></view><view class="dot"></view></view></view>
+
+  <view class="card">
+    <text class="tag">同一个知识点 · 新题</text>
+    <view class="qbox">计算：<view class="frac"><view class="fn">2</view><view class="fd">5</view></view> + <view class="frac"><view class="fn">1</view><view class="fd">3</view></view> = ?</view>
+    <view class="opts">
+      <view wx:for="{{pOpts}}" wx:key="index" bindtap="pickP" data-i="{{index}}"
+            class="opt {{pPicked === index ? (index === 1 ? 'opt-right' : 'opt-wrong') : ''}}">{{item}}</view>
+    </view>
+    <view wx:if="{{pResult === 'wrong'}}" class="note">再想想？这次分母要变成多少呀 🤔（不算错，慢慢来）</view>
+    <block wx:if="{{pResult === 'right'}}">
+      <view class="note note-good">✅ 答对啦！你已经会「换数字也不怕」了——第一步完成 🎉 阿通分能量 +30</view>
+      <view class="btn" bindtap="go" data-s="feynman">第二步：当小老师 →</view>
+    </block>
+    <view class="btn btn-ghost btn-sm" bindtap="appeal">我觉得我对了 🙋</view>
+    <view class="muted" style="margin-top:10rpx;">作答方式按题型切换：选择题点选 / 口算语音报答案 / 解答题拍照（原型只演示点选）</view>
+  </view>
+</block>
+
+<!-- ===== 5. 费曼讲解 ===== -->
+<block wx:if="{{screen === 'feynman'}}">
+  <view class="topbar"><view class="back" bindtap="go" data-s="practice">‹</view><view class="h1">小老师时间 🎓</view>
+    <view class="dots"><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot"></view><view class="dot"></view></view></view>
+
+  <view class="chat">
+    <view wx:for="{{fMsgs}}" wx:key="index" class="row {{item.who === 'me' ? 'row-me' : ''}}">
+      <view class="avatar">{{item.who === 'me' ? '🧒' : '🐣'}}</view>
+      <view class="bubble {{item.who === 'me' ? 'bubble-me' : ''}}">{{item.text}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!fDone}}" class="mic {{micState === 'rec' ? 'mic-rec' : ''}} {{micState === 'busy' ? 'mic-busy' : ''}}" bindtap="micTap">
+    {{micState === 'idle' ? micLabel : micState === 'rec' ? '🔴 录音中… 说完再点一下' : '✨ 嘟嘟正在听懂…'}}
+  </view>
+
+  <view wx:if="{{fDone}}" class="card" style="margin-top:22rpx;">
+    <view class="monster"><text class="m-emoji">👾</text>
+      <view class="m-body"><view class="m-name">阿通分 · 理解度</view>
+        <view class="energy"><view class="energy-i" style="width:90%"></view></view></view>
+      <text class="m-up">90 ↑</text></view>
+    <view class="btn" bindtap="go" data-s="review">最后一题：以前的小怪兽来啦 →</view>
+  </view>
+</block>
+
+<!-- ===== 6. 艾宾浩斯复习 ===== -->
+<block wx:if="{{screen === 'review'}}">
+  <view class="topbar"><view class="back" bindtap="go" data-s="feynman">‹</view><view class="h1">复习挑战 ⏰</view>
+    <view class="dots"><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot dot-on"></view><view class="dot"></view></view></view>
+
+  <view class="card">
+    <view class="row"><view class="avatar">🦖</view><view class="bubble">还记得我吗？4 天前你驯服过我！我饿了，想再考考你 😋</view></view>
+    <view style="margin-top:16rpx;"><text class="tag">小数加减法 · 第 3 次复习</text></view>
+    <view class="qbox">计算：0.8 + 0.15 = ?</view>
+    <view class="opts">
+      <view wx:for="{{rOpts}}" wx:key="index" bindtap="pickR" data-i="{{index}}"
+            class="opt {{rPicked === index ? (index === 1 ? 'opt-right' : 'opt-wrong') : ''}}">{{item}}</view>
+    </view>
+    <view wx:if="{{rResult === 'wrong'}}" class="note">咦，小数点对齐了吗？再试一次 😊（答错只会回到更近的复习点，不会白学）</view>
+    <block wx:if="{{rResult === 'right'}}">
+      <view class="note note-good">✅ 记得牢牢的！小数点能量 +20 → 100，点亮啦 💡 下次 7 天后再见～</view>
+      <view class="btn" bindtap="finish">完成今日打卡 🎉</view>
+    </block>
+  </view>
+</block>
+
+<!-- ===== 7. 打卡成功 ===== -->
+<block wx:if="{{screen === 'done'}}">
+  <view class="celebrate">
+    <view class="big-emoji">🎉</view>
+    <view class="celebrate-h">今日打卡完成！</view>
+    <view class="muted" style="margin-top:8rpx;">🔥 连续打卡 {{streak}} 天 · 此处有撒花动画占位</view>
+  </view>
+
+  <view class="ticket">
+    <view>🎫 你获得一张游戏券</view>
+    <view class="ticket-b">10 分钟 · 蛋仔派对</view>
+    <view style="font-size:25rpx;opacity:.9;">去找爸爸妈妈兑换吧～</view>
+  </view>
+
+  <view class="card">
+    <view class="title">今天的收获</view>
+    <view class="monster"><text class="m-emoji">👾</text>
+      <view class="m-body"><view class="m-name">阿通分 · 分数加减法</view>
+        <view class="energy"><view class="energy-i" style="width:90%"></view></view></view>
+      <text class="m-up">90 ↑</text></view>
+    <view class="monster"><text class="m-emoji">🦖✨</text>
+      <view class="m-body"><view class="m-name">小数点 · 已点亮！获得徽章 🏅</view>
+        <view class="energy"><view class="energy-i" style="width:100%"></view></view></view>
+      <text class="m-up">100</text></view>
+  </view>
+  <view class="btn btn-big" bindtap="go" data-s="home">回到首页</view>
+  <view class="placeholder">家长设置区同步显示「今日已打卡，可发放奖励」（第二批原型）</view>
+</block>
+
+</view>

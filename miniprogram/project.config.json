@@ -1,0 +1,13 @@
+{
+  "appid": "wxb576a46e974b5722",
+  "projectname": "cuoti-huoban-prototype",
+  "compileType": "miniprogram",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "minified": true,
+    "ignoreUploadUnusedFiles": true
+  },
+  "libVersion": "latest",
+  "condition": {}
+}
