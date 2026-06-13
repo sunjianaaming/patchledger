@@ -1,0 +1,104 @@
+/* 错题伙伴 · 原型样式（designWidth 750，px 1:1 编译为 rpx） */
+.wrap { padding: 28px; padding-bottom: 160px; }
+
+/* 间距工具类 */
+.mt-s { margin-top: 12px; }
+.mt-m { margin-top: 22px; }
+
+/* 顶栏 */
+.topbar { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.back { background: #fff; border-radius: 18px; width: 64px; height: 64px; line-height: 64px;
+        text-align: center; font-size: 34px; flex: none; }
+.h1 { font-size: 34px; font-weight: 700; flex: 1; }
+.dots { display: flex; gap: 10px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; background: #d6d9e6; }
+.dot-on { background: #6c5ce7; }
+
+.card { background: #fff; border-radius: 28px; padding: 28px; margin-bottom: 22px;
+        box-shadow: 0 2px 8px rgba(80, 80, 120, 0.06); }
+.title { font-size: 31px; font-weight: 700; }
+.muted { color: #8a8fa3; font-size: 25px; line-height: 1.6; margin-top: 8px; }
+.tag { display: inline-block; background: #efedfd; color: #6c5ce7; font-size: 23px;
+       border-radius: 14px; padding: 4px 16px; margin-right: 10px; }
+
+.btn { background: #6c5ce7; color: #fff; border-radius: 24px; padding: 26px;
+       font-size: 31px; font-weight: 600; text-align: center; margin-top: 20px; }
+.btn-ghost { background: #fff; color: #6c5ce7; border: 2.5px solid #d8d3f8; font-weight: 500; }
+.btn-big { padding: 34px; font-size: 33px; border-radius: 32px; }
+.btn-sm { font-size: 25px; padding: 14px; margin-top: 14px; }
+
+/* 对话 */
+.chat { display: flex; flex-direction: column; gap: 18px; }
+.row { display: flex; gap: 14px; align-items: flex-end; }
+.row-me { flex-direction: row-reverse; }
+.avatar { width: 62px; height: 62px; border-radius: 50%; background: #fff; text-align: center;
+          line-height: 62px; font-size: 36px; flex: none; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); }
+.bubble { max-width: 78%; padding: 20px 24px; border-radius: 28px; font-size: 29px; line-height: 1.55;
+          background: #fff; border-bottom-left-radius: 8px; box-shadow: 0 2px 6px rgba(80, 80, 120, 0.06); }
+.bubble-me { background: #6c5ce7; color: #fff; border-bottom-left-radius: 28px; border-bottom-right-radius: 8px; }
+
+/* 录音按钮三态 */
+.mic { display: flex; align-items: center; justify-content: center; border-radius: 24px;
+       padding: 26px; font-size: 29px; font-weight: 600; background: #ffe9e3; color: #e0552f;
+       margin-top: 20px; }
+.mic-rec { background: #e0552f; color: #fff; animation: pulse 1s infinite; }
+.mic-busy { background: #f0f0f6; color: #8a8fa3; }
+@keyframes pulse { 50% { opacity: 0.75; } }
+
+/* 题目框 + 分数 */
+.qbox { background: #fffdf3; border: 2.5px dashed #e8c66a; border-radius: 20px; padding: 26px;
+        font-size: 33px; text-align: center; line-height: 1.7; margin-top: 16px;
+        display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
+.frac { display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; margin: 0 6px; }
+.fn { padding: 0 10px; font-size: 29px; border-bottom: 3px solid #333; }
+.fd { padding: 0 10px; font-size: 29px; }
+
+/* 选项 */
+.opts { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 22px; }
+.opt { width: calc(50% - 9px); box-sizing: border-box; border: 2.5px solid #e3e5f0; background: #fff;
+       border-radius: 20px; padding: 26px; font-size: 33px; text-align: center; }
+.opt-right { border-color: #27ae60; background: #eafaf0; }
+.opt-wrong { border-color: #e0552f; background: #fdf0ec; }
+
+/* 怪兽与能量条 */
+.monster { display: flex; align-items: center; gap: 18px; padding: 18px 0; }
+.m-emoji { font-size: 56px; }
+.m-body { flex: 1; }
+.m-name { font-size: 27px; font-weight: 600; }
+.m-val { color: #8a8fa3; font-size: 27px; }
+.m-up { color: #27ae60; font-weight: 700; font-size: 27px; }
+.energy { height: 18px; background: #edeef5; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+.energy-i { display: block; height: 100%; background: linear-gradient(90deg, #a29bfe, #6c5ce7);
+            border-radius: 10px; }
+
+/* 提示条 */
+.note { background: #fff8e8; border-radius: 18px; padding: 18px 22px; font-size: 24px;
+        color: #9a7b2d; line-height: 1.6; margin-top: 18px; }
+.note-good { background: #eafaf0; color: #1e7e46; }
+.placeholder { font-size: 21px; color: #b6b9c8; text-align: center; margin-top: 10px; }
+
+/* 归因 chips */
+.cause { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 18px; }
+.chip { border: 2.5px solid #e3e5f0; background: #fff; border-radius: 36px; padding: 12px 26px;
+        font-size: 27px; }
+.chip-on { border-color: #6c5ce7; background: #efedfd; color: #6c5ce7; font-weight: 600; }
+
+/* 拍照 */
+.photo-prev { width: 100%; border-radius: 16px; border: 4px dashed #6c5ce7; margin-top: 16px; }
+.ocr-edit { width: 100%; box-sizing: border-box; border: 2.5px solid #d8d3f8; border-radius: 20px;
+            padding: 22px; font-size: 31px; line-height: 1.6; background: #fcfbff; margin-top: 14px;
+            min-height: 120px; }
+
+/* 打卡进度 */
+.progress2 { display: flex; gap: 18px; margin-top: 20px; }
+.pstep { flex: 1; background: #f6f7fb; border-radius: 20px; padding: 22px; font-size: 25px; line-height: 1.6; }
+.st { font-size: 34px; }
+
+/* 打卡成功 */
+.celebrate { text-align: center; padding-top: 70px; }
+.big-emoji { font-size: 130px; }
+.celebrate-h { font-size: 40px; font-weight: 800; margin-top: 16px; }
+.ticket { background: linear-gradient(135deg, #ffb347, #ff8008); color: #fff; border-radius: 28px;
+          padding: 32px; margin: 30px 0; text-align: center; line-height: 1.8; }
+.ticket-b { font-size: 38px; font-weight: 800; }
+.ticket-sub { font-size: 25px; opacity: 0.9; }

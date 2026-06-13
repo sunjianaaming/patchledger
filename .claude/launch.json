@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "prototype",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["/tmp/cuoti-proto/serve.py"],
+      "port": 8765
+    }
+  ]
+}
